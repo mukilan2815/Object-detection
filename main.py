@@ -1,5 +1,4 @@
 import cv2
-import numpy as np
 
 with open("coco.names", 'rt') as f:
     class_names = f.read().strip().splitlines()
@@ -10,16 +9,23 @@ net.setInputSize(416, 416)
 net.setInputScale(1.0 / 127.5)
 net.setInputMean((127.5, 127.5, 127.5))
 net.setInputSwapRB(True)
-image_path = "human/karina-carvalho-fKTKVrNqXQQ-unsplash.jpg"
+image_path = "truck/rhys-moult-7eaFIKeo1MQ-unsplash.jpg"
 img = cv2.imread(image_path)
 class_ids, confidences, boxes = net.detect(img, confThreshold=0.55)
+
 if len(class_ids) > 0:
-    for class_id, confidence, box in zip(class_ids.flatten(), confidences.flatten(), boxes):
+    indices = cv2.dnn.NMSBoxes(boxes.tolist(), confidences.tolist(), 0.55, 0.4)
+
+    for i in indices:
+        index = i  # Use the index value directly
+        class_id = class_ids[index]
+        confidence = confidences[index]
+        box = boxes[index]
         class_name = class_names[class_id - 1]
         label = f"{class_name.upper()} {confidence:.2f}"
         cv2.rectangle(img, box, color=(0, 255, 0), thickness=4)
         cv2.putText(img, label, (box[0] + 10, box[1] + 30),
-                    cv2.FONT_HERSHEY_COMPLEX, 2, (0, 0, 0), 2)
+                    cv2.FONT_HERSHEY_DUPLEX, 3, (0, 0, 0), 2)
     max_display_height = 800
     aspect_ratio = img.shape[1] / img.shape[0]
     height = max_display_height
